@@ -1,0 +1,16 @@
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.csprojAssemblyReference.cache
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.Properties.Resources.resources
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.csproj.GenerateResource.cache
+F:\VisualStudio2019\proj\Forms_MyNote\bin\Debug\Forms_MyNote.exe.config
+F:\VisualStudio2019\proj\Forms_MyNote\bin\Debug\Forms_MyNote.exe
+F:\VisualStudio2019\proj\Forms_MyNote\bin\Debug\Forms_MyNote.pdb
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.exe
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.pdb
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.NoteCopy.resources
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.form.resources
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.FormSearch.resources
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.About.resources
+F:\VisualStudio2019\proj\Forms_MyNote\bin\Debug\Forms_MyNote.exe.manifest
+F:\VisualStudio2019\proj\Forms_MyNote\bin\Debug\Forms_MyNote.application
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.exe.manifest
+F:\VisualStudio2019\proj\Forms_MyNote\obj\Debug\Forms_MyNote.application

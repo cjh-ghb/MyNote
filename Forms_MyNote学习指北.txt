@@ -1,0 +1,159 @@
+﻿练习的项目是制作一个文本编辑器，具体项目要求有
+1.打开保存文件，文本的编辑
+2.文本的查找
+3.文本的字体颜色设置
+4.打印选项以及导出PDF文件
+模仿Windows中记事本软件，以下讲解的是我通过VS2019 .NET Framework4.0 中winForms完成的文本编辑器
+
+文本编辑软件的实现流程应该是画界面 -> 添加按钮点击事件和快捷键 -> 实现功能，这是一个比较轻松的流程。文本区使用richtextbox，工具栏menuStrip，状态栏statusStrip，还有时间控件timer，打印机控件printDocument
+
+首先，界面分三部分：菜单栏，文本编辑区和状态栏，然后菜单栏中添加点击事件，还有快捷键，快捷键是主窗体的KeyDown事件，以下是快捷键的设置：
+		private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.N && e.Modifiers == Keys.Control)
+            {
+                handleCreate();
+            }...		//ctrl+n
+			if (e.KeyCode == Keys.S && (int)e.Modifiers == ((int)Keys.Control 		+ (int)Keys.Shift))
+            {                               //同一类型的快捷键需要强转int进行加操作
+                handleSaveAs();
+   			}...		//ctrl+shift+s
+			if (e.KeyCode == Keys.Add && e.Modifiers == Keys.Control)
+            {
+                handleFontAdd();
+    	}...		//ctrl++
+
+本项目实现的快捷键有Ctrl+N 	Ctrl+P打印 	Ctrl+S 	Ctrl+Shift+S另存为
+Ctrl+O	F6导出PDF	F5输出时间	Ctrl+X	Ctrl+C	Ctrl+V	Ctrl+Z
+Ctrl+H查找	Alt+F字体型号	Alt+C字体颜色	Ctrl+ +/- 字体大小
+
+下面是一些基础的功能解析：
+1.打开Ctrl+O	首先，在打开新建打印这些操作中，都应该调用一个文档是否需要保存函数，我是根据状态栏（后面讲）中对文本输入操作之后，状态栏记录文本状态为已更改，那么提示messagebox是否保存文件。
+		DialogResult dialogResult = MessageBox.Show("内容已改变，是否先保存?",
+                    "Note express", MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+             if (dialogResult == DialogResult.Yes)
+...
+然后实现打开文件对话框操作
+		OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "文本文件|*.txt";
+            openFileDialog.InitialDirectory = @"C:\Users\MTSW\Desktop\vs";
+            //你选择一个文件后，确定打开
+            if(openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                TextBox.Text = File.ReadAllText(openFileDialog.FileName);
+        	}
+这里还有一个小技巧，我得到的是文件绝对路径+文件名，怎么只截取出文件名呢（应该把文件名显示在状态栏）
+string TruncateFilename = Path.GetFileName(saveFileDialog.FileName);
+
+2.新建Ctrl+N	新建只需把状态栏当前文件名设置为NewFile，文本内容清空，还有状态栏文本状态为未改动（还可以有一些别的）
+
+3.保存Ctrl+S	这里应分为是打开文件后的保存还是新建文件后的保存，是新建文件实现保存文件对话框就OK,保存后修改状态栏文件名与文件状态
+如果是打开文件后然后修改了文本内容，应再保存一次文本内容
+				using (FileStream fileStream = new FileStream(fileName,
+                        FileMode.OpenOrCreate, FileAccess.Write))
+                   {
+                        byte[] buffer = Encoding.Default.GetBytes(TextBox.Text.Trim());
+                        fileStream.Write(buffer, 0, buffer.Length);
+               		}
+4.Ctrl+Shift+S另存为	这情况全部是保存文件对话框
+
+5.Ctrl+X	Ctrl+C	Ctrl+V	Ctrl+Z	剪切复制粘贴撤销操作一般文本控件会自带这些功能，我们直接跳过就好
+
+6.Alt+F字体型号		调用字体对话框
+		public void handleFont()
+        {
+            FontDialog fontDialog = new FontDialog();
+            fontDialog.ShowDialog();
+            TextBox.SelectionFont = fontDialog.Font;
+    	}
+
+7.Alt+C字体颜色		调用颜色对话框
+		public void handleColor()
+        {
+            ColorDialog fontDialog = new ColorDialog();
+            fontDialog.ShowDialog();
+            TextBox.SelectionColor = fontDialog.Color;
+    	}
+
+8.Ctrl+ +/- 字体大小	第一步初始化时得到字体大小；第二步创建变量得到初始化字体大小，根据快捷键输入对变量加减；第三步
+		Font font = TextBox.Font;
+        FontStyle fontStyle = new FontStyle();
+        TextBox.SelectionFont = new Font(font.Name,
+        fontSize, fontStyle);	//改变变量fontSize
+
+9.状态栏中实时得到当前光标的位置（行列和当前进度）
+我们在文本控件上的键盘事件和鼠标事件后都可能改变光标的位置，TextBox_KeyUp和TextBox_MouseDown，也就是对以上两个事件后确定一次光标的位置
+	int index = TextBox.GetFirstCharIndexOfCurrentLine();   //找到当前行第一个字符
+         row = TextBox.GetLineFromCharIndex(index) + 1;  //对当前字符检索行号
+         col = TextBox.SelectionStart - index + 1;       //当前字符的文件位置 - 当前行第一个字符位置
+         statusCol.Text = "Col " + col;
+     statusLn.Text = "Row " + row;
+	//得到光标位置如果是自己运算那要考虑的因素就多了，如上是标准答案
+
+	//相反得到光标位置的当前进度就简单多了，以下看似为了更准确做了稍复杂的计算
+	statusRate.Text = ((int)((double)(index + col - 1) 
+                    / (double)TextBox.TextLength * 100)).ToString() + " %";
+
+10.F5输出时间
+添加Timer控件（之后使用TCP,ZMQ通信的时候，就知道DateTime.Now.ToString();
+得到当前时间了，并不需要Timer控件），可以把当前时间按格式显示在状态栏	 	
+  		TextBox.Text += statusTime.Text;
+       TextBox.SelectionStart = col + statusTime.Text.Length;  //光标出现在时间后面
+这样设置光标会把缓存区的内容清空了，不能撤销我觉得这应该不对
+
+11.F6导出PDF
+打印简单来说分四步，导出PDF也是通过一种打印机生成PDF文件，这里F6快捷键只是把中间打印选项步骤代码帮你选了，我这里只需要你设置它的生成的PDF文件文件名。
+第一，添加printDocument控件，在代码中实例这个控件，它自带Print()可以打印，在WPF中还需要打印预览步骤什么的
+	private PrintDocument textToPrint = new PrintDocument();
+第二，创建打印对话框
+	PrintDialog printDialog = new PrintDialog();
+         printDialog.PrintToFile = true;
+    printDialog.Document = textToPrint;
+第三，就是你要打印哪个文件了，需要得到你要打印的那个文件的文件流StreamReader
+一般就是你当前打开的那个文件嘛，如果是新建文档你会需要先保存的
+	StreamReader streamReader = new StreamReader(fileName, Encoding.Default);
+	//尝试过多次，编码格式采用默认是很好用的
+    return streamReader;
+第四，在文件对话框中，如果你确认打印了（F6这个快捷键不要你确定，少一个if），进行打印	textToPrint.Print();	
+在打印控件中还有一个打印页面事件，执行DrawString()函数就会打印，
+		private void printDocument1_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            FontStyle fontStyle = new FontStyle();
+            Font font = new Font(TextBox.Font, fontStyle);
+            e.Graphics.DrawString(text, font, Brushes.Red,
+                e.MarginBounds.X, e.MarginBounds.Y);
+     	}	//这里需要着重了解DrawString函数参数，在VS中放在这个函数名可以通过F12查看定义
+
+12.Ctrl+H查找
+我觉得应该有查找替换对话框，但是我还不知道，我是通过自定义对话框来实现的，当中可以说有三个技巧，第一，让主窗体知道要找什么怎么找，通过定义两个委托事件为查找的字符串和查找的条件；（我一开始用委托是先记住一个模板，看是谁要从谁那里获得数据的问题）那么在查找窗体中，应定义委托类型
+		public delegate void MyDelegate(string text);   //定义委托实现传值
+     	public delegate void MyDelegateInt(int text);
+然后事件和传值（比较简陋）
+ 		public event MyDelegate MyEvent;    //事件
+       	public event MyDelegateInt MyEventInt;
+        		private void button1_Click(object sender, EventArgs e)
+        		{               //button1就是确认按钮
+            		MyEventInt(1);
+            		MyEvent(this.searchText.Text);
+            	//OnLostFocus(e);
+在主窗体中得到数据
+				FormSearch formSearch = new FormSearch();
+				formSearch.MyEvent += new MyDelegate(toSearchToText);
+            	formSearch.MyEventInt += new MyDelegateInt(messageInt);
+            	formSearch.Show();	//ShowDialog是模态调用（感觉是不会丢失焦点）
+				formSearch.StartPosition = FormStartPosition.CenterParent;
+				还需实现toSearchToText和messageInt订阅来获取值
+
+第二，让主窗体查找字符串并选中；
+			//在文本中从ver开始匹配查找searchText，返回值是找到的第一个索引
+            int start = TextBox.Text.IndexOf(searchText, ver);
+		//ver是游标，从哪开始找的
+		然后，selection实现选中功能
+		TextBox.SelectionStart = start;
+    	TextBox.SelectionLength = searchText.Length;
+		//TextBox.SelectionColor = Color.Red;	还可以改颜色
+	还有一个是从后往前找和一些不区分大小写功能（一般把所有字符全大写或全小写）
+	int last = TextBox.Text.LastIndexOf(searchText, var);
+
+第三，在查找窗体中确认查找之后，让焦点给到主窗体，然后主窗体查找选中后，将焦点再返回给查找窗体，直到退出查找窗体；

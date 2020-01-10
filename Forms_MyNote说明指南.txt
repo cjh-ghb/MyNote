@@ -1,0 +1,2 @@
+﻿打开Forms_MyNote文件夹，通过Visual Studio(.NET framework 4.0)打开解决方案Forms_MyNote.sln。
+Git is free software distributed under the GPL
